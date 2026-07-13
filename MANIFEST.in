@@ -1,0 +1,14 @@
+include LICENSE
+include README.md
+include CHANGELOG.md
+include PORTFOLIO.md
+include CITATION.cff
+include AI_ASSISTED_DEVELOPMENT.md
+include config.example.yaml
+include config.demo.yaml
+include requirements.txt
+include requirements-dev.txt
+recursive-include docs *.md *.png
+recursive-include examples *.py *.jsonl
+recursive-include scripts *.sh
+recursive-include launchd *.plist

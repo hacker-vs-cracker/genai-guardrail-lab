@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+title: GenAI Guardrail Lab
+message: If you use this project in research or a published assessment, please cite the repository and version used.
+type: software
+authors:
+  - family-names: Arjun
+    given-names: Arjun
+version: 0.2.0
+date-released: 2026-07-13
+license: MIT

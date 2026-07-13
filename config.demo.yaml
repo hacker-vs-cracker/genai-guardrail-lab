@@ -1,0 +1,44 @@
+project:
+  name: GenAI Guardrail Lab Demo
+paths:
+  database: ./demo-output/data/guardrail_lab.sqlite3
+  reports: ./demo-output/reports
+  archives: ./demo-output/archives
+collection:
+  min_published_date: "2026-01-01"
+  request_timeout_seconds: 10
+  allow_intelligence_execution: false
+  safe_filter_enabled: true
+execution:
+  max_workers: 2
+  case_limit: 6
+scoring:
+  safe_token: SAFE_COMPLETION_TOKEN
+plugins:
+  modules: []
+sources:
+  local_safe_seed:
+    type: jsonl_file
+    enabled: true
+    path: ./examples/prompts.safe.jsonl
+    execute: true
+targets:
+  safe_reference:
+    type: mock
+    enabled: true
+    mode: safe
+    model: mock-safe
+  mixed_reference:
+    type: mock
+    enabled: true
+    mode: mixed
+    model: mock-mixed
+scenarios:
+  direct: {type: direct, enabled: true}
+  indirect_rag: {type: indirect_rag, enabled: true}
+  multi_turn: {type: multi_turn, enabled: true}
+  tool_output: {type: tool_output, enabled: true}
+evaluators:
+  deterministic: {type: deterministic, enabled: true}
+reporting:
+  redact_patterns: []

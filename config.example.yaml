@@ -1,0 +1,155 @@
+project:
+  name: GenAI Guardrail Lab
+
+paths:
+  database: ./data/guardrail_lab.sqlite3
+  reports: ./reports
+  archives: ./archives
+
+collection:
+  # Records older than this date are ignored during collection.
+  min_published_date: "2026-01-01"
+  request_timeout_seconds: 60
+
+  # Research papers, release notes, and RSS entries are intelligence, not prompts.
+  # Leave this false unless you have reviewed and converted them into test cases.
+  allow_intelligence_execution: false
+  safe_filter_enabled: true
+
+execution:
+  max_workers: 2
+  case_limit: 0       # 0 means all executable cases
+
+scoring:
+  safe_token: SAFE_COMPLETION_TOKEN
+  response_char_limit: 8000
+
+# External modules may register additional source, target, scenario, or evaluator plugins.
+plugins:
+  modules: []
+
+sources:
+  local_safe_seed:
+    type: jsonl_file
+    enabled: true
+    path: ./examples/prompts.safe.jsonl
+    execute: true
+    default_published_at: "2026-01-01"
+
+  # Paper abstracts are stored on the prompt library page as non-executable intelligence.
+  arxiv_prompt_injection:
+    type: arxiv_intel
+    enabled: true
+    query: 'all:"prompt injection" OR all:"jailbreak" OR all:"LLM red teaming"'
+    max_results: 30
+
+  # Tracks how established tools change. Release notes are never run as attacks.
+  garak_releases:
+    type: github_releases_intel
+    enabled: true
+    repository: NVIDIA/garak
+    limit: 10
+
+  pyrit_releases:
+    type: github_releases_intel
+    enabled: true
+    repository: microsoft/PyRIT
+    limit: 10
+
+  # Optional structured prompt dataset. Review the dataset and licensing before enabling.
+  example_huggingface_dataset:
+    type: huggingface_rows
+    enabled: false
+    dataset: owner/dataset-name
+    config: default
+    split: train
+    length: 100
+    execute: true
+    default_published_at: "2026-01-01"
+
+  # Optional security feed. Feed summaries are intelligence only; the tool does not
+  # blindly scrape and execute prompt text from arbitrary blog articles.
+  example_security_feed:
+    type: rss_intel
+    enabled: false
+    url: https://example.org/security-feed.xml
+    limit: 25
+    default_published_at: "2026-01-01"
+
+targets:
+  local_ollama:
+    type: ollama
+    enabled: true
+    base_url: http://localhost:11434
+    models:
+      - llama3.1:8b
+      - qwen2.5-coder:14b
+      - llama3.1:latest
+    temperature: 0
+    num_predict: 512
+    # Set think: false for models that support a separate reasoning trace and when
+    # you do not want that trace included in target output.
+
+  hosted_openai_compatible:
+    type: openai_compatible
+    enabled: false
+    endpoint: https://example.org/v1/chat/completions
+    api_key_env: HOSTED_LLM_API_KEY
+    models:
+      - your-model-name
+    response_path: choices.0.message.content
+    temperature: 0
+    max_tokens: 512
+
+  # Use this adapter to test a complete RAG service, agent, or internal GenAI API.
+  # Placeholders can be used in headers and the JSON body.
+  application_endpoint:
+    type: http_json
+    enabled: false
+    endpoint: http://localhost:8000/chat
+    method: POST
+    api_key_env: APP_API_KEY
+    auth_header: Authorization
+    auth_prefix: "Bearer "
+    headers:
+      X-Test-Campaign: guardrail-regression
+    body:
+      messages: ${messages}
+      session_id: guardrail-lab
+    response_path: answer
+    model: application-under-test
+
+  # Useful for an in-process LangChain, LangGraph, Haystack, or custom pipeline.
+  local_python_application:
+    type: python_callable
+    enabled: false
+    callable: examples.custom_python_target:invoke
+    response_path: answer
+    model: local-pipeline
+
+scenarios:
+  direct:
+    type: direct
+    enabled: true
+  indirect_rag:
+    type: indirect_rag
+    enabled: true
+  multi_turn:
+    type: multi_turn
+    enabled: true
+  tool_output:
+    type: tool_output
+    enabled: true
+
+evaluators:
+  deterministic:
+    type: deterministic
+    enabled: true
+
+reporting:
+  include_full_prompts: true
+  include_full_responses: true
+  # Add organisation-specific secrets or identifiers here before sharing reports.
+  redact_patterns:
+    - '(?i)api[_-]?key\s*[:=]\s*[A-Za-z0-9._-]+'
+    - '(?i)bearer\s+[A-Za-z0-9._-]+'
