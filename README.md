@@ -1,6 +1,10 @@
 # GenAI Guardrail Lab
 
-A defensive, plugin-based testing harness for collecting evidence of prompt injection, indirect prompt injection, canary leakage, and instruction-boundary failures across LLM and GenAI applications.
+<p align="center"> <img src="docs/images/genai-guardrail-lab-overview.png" alt="GenAI Guardrail Lab workflow showing test-case collection and continuous GenAI security testing" width="100%" /> </p>
+
+<p align="center"> <strong>Build a reusable security test-case library, continuously evaluate GenAI systems, and generate evidence for human review.</strong> </p>
+
+A defensive, plugin-based testing framework for identifying potential prompt injection, jailbreak, indirect RAG injection, canary leakage, and instruction-boundary failures across local LLMs, hosted APIs, RAG applications, agents, and custom GenAI workflows.
 
 > **Project status: Alpha / portfolio project.** The framework supports repeatable security screening and regression experiments. Its automated verdicts are candidate findings and do not replace manual validation, threat modelling, source-code review, or an authorised red-team assessment.
 
